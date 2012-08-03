@@ -268,11 +268,10 @@ int doproxy(int connfd)
     		{
         		printf("bufrequest error:\n%s\n", bufrequest);
 			fprintf(stderr, "rio_writen send request error\n");
-      			
+      			close(serverfd);	
 			// send back error msg to client
 			//clienterror(connfd, "request error", "404", "Not found", "Send request to server error");
 
-			close(connfd);
 			return -1;
     		}
 	
@@ -288,10 +287,11 @@ int doproxy(int connfd)
 			// TODO: n error!
         		if(rio_writen(connfd, bufresponse, len) < 0)
         		{
-        			printf("bufresponse error:\n%s\n", bufresponse); 
+        			printf("bufresponse error:%s\nlen:%d\n%s\n", strerror(errno), len, bufresponse); 
             			fprintf(stderr, "rio_writen send response error\n");
 				//clienterror(connfd, "response error", "404", "Not found", "Send response to client error");
-            			return -1;
+            			close(serverfd);
+				return -1;
         		}
 			// reset buffer
 			memset(bufresponse, 0, sizeof(bufresponse));
@@ -320,7 +320,7 @@ int read_request(rio_t *rp, char *bufrequest, char *hostname, int *port, char *u
 	// request line
 	if(rio_readlineb(rp, buf, MAXLINE) <= 0)
         	return -1;
-	printf("buf: %s\n", buf);
+	//printf("buf: %s\n", buf);
     	sscanf(buf, "%s %s", method, uri);
 	
 	// extract hostname and port info
@@ -336,7 +336,7 @@ int read_request(rio_t *rp, char *bufrequest, char *hostname, int *port, char *u
         	return -1;
     	}
 	while(strcmp(buf, "\r\n")) {
-		printf("buf: %s\n", buf);
+		//printf("buf: %s\n", buf);
 		//printf("while loop\n");
 		if(strcmp(buf, "\n") == 0)
 		{
